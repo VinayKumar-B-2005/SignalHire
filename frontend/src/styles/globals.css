@@ -1,0 +1,323 @@
+/* SignalHire — globals.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Reset & Base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0C0C0C;
+  color: #F5F5F5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #141414;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F59E0B;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #F5F5F5;
+}
+
+/* ── Layout Tokens ──────────────────────────────────────────────────────────── */
+:root {
+  --navbar-height: 56px;
+  --sidebar-width: 260px;
+  --color-bg-primary: #0C0C0C;
+  --color-bg-secondary: #141414;
+  --color-bg-card: #1A1A1A;
+  --color-bg-hover: #202020;
+  --color-border: #2A2A2A;
+  --color-border-accent: #F59E0B;
+  --color-accent: #F59E0B;
+  --color-accent-light: #FBBF24;
+  --color-danger: #EF4444;
+  --color-success: #22C55E;
+  --color-info: #3B82F6;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A3A3A3;
+  --color-text-muted: #525252;
+}
+
+/* ── Component Classes ──────────────────────────────────────────────────────── */
+.card {
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+}
+
+.card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: #202020;
+}
+
+.btn-primary {
+  background: #F59E0B;
+  color: #0C0C0C;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.btn-primary:hover {
+  background: #FBBF24;
+  transform: scale(1.01);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #2A2A2A;
+  color: #F5F5F5;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: #1A1A1A;
+}
+
+.input-field {
+  background: #141414;
+  border: 1px solid #2A2A2A;
+  color: #F5F5F5;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 200ms ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #F59E0B;
+}
+
+.input-field::placeholder {
+  color: #525252;
+}
+
+.label-caps {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  color: #A3A3A3;
+}
+
+/* ── Score & Rank Badges ────────────────────────────────────────────────────── */
+.score-badge {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #F59E0B;
+}
+
+.rank-badge-1 { background: #F59E0B; color: #0C0C0C; }
+.rank-badge-2 { background: #A3A3A3; color: #0C0C0C; }
+.rank-badge-3 { background: #CD7F32; color: #0C0C0C; }
+.rank-badge-n { background: #2A2A2A; color: #A3A3A3; }
+
+/* ── Skill Pills ────────────────────────────────────────────────────────────── */
+.skill-pill {
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #F59E0B;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.06);
+  white-space: nowrap;
+}
+
+/* ── Score Bar ──────────────────────────────────────────────────────────────── */
+.score-bar-track {
+  background: #2A2A2A;
+  border-radius: 2px;
+  height: 4px;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  background: #F59E0B;
+  border-radius: 2px;
+  transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Proficiency Badges ─────────────────────────────────────────────────────── */
+.prof-expert   { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
+.prof-advanced { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59,130,246,0.3); }
+.prof-intermediate { background: rgba(82, 82, 82, 0.3); color: #A3A3A3; border: 1px solid #2A2A2A; }
+.prof-beginner { background: #2A2A2A; color: #525252; border: 1px solid #2A2A2A; }
+
+/* ── Red Flag Badges ────────────────────────────────────────────────────────── */
+.flag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Tier Badges ────────────────────────────────────────────────────────────── */
+.tier-1 { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
+.tier-2 { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59,130,246,0.3); }
+.tier-3 { background: #2A2A2A; color: #A3A3A3; border: 1px solid #333; }
+.tier-4 { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239,68,68,0.3); }
+
+/* ── Toggle Switch ──────────────────────────────────────────────────────────── */
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+}
+.toggle input { display: none; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #2A2A2A;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #A3A3A3;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 200ms ease, background 200ms ease;
+}
+.toggle input:checked + .toggle-slider { background: rgba(245, 158, 11, 0.3); }
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+  background: #F59E0B;
+}
+
+/* ── Range Slider ───────────────────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #2A2A2A;
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #F59E0B;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 150ms;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes pulse-amber {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+@keyframes count-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in { animation: fade-in 300ms ease forwards; }
+.animate-pulse-amber { animation: pulse-amber 2s ease-in-out infinite; }
+
+/* ── Divider ────────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: #2A2A2A;
+  margin: 12px 0;
+}
+
+/* ── Backdrop Overlay ───────────────────────────────────────────────────────── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 40;
+  backdrop-filter: none;
+}
+
+/* ── Tab Active ──────────────────────────────────────────────────────────── */
+.tab-active {
+  color: #F59E0B;
+  border-bottom: 2px solid #F59E0B;
+}
+.tab-inactive {
+  color: #A3A3A3;
+  border-bottom: 2px solid transparent;
+}
+
+/* ── Recharts custom ──────────────────────────────────────────────────────── */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+.recharts-default-tooltip {
+  background: #1A1A1A !important;
+  border: 1px solid #2A2A2A !important;
+  border-radius: 8px !important;
+  color: #F5F5F5 !important;
+}
