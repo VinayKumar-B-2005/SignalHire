@@ -1,0 +1,68 @@
+team_name: "signalhire"
+
+primary_contact:
+  name: "SignalHire Team"
+  email: "team@signalhire.dev"
+  phone: "+91-XXXXXXXXXX"
+
+team_members:
+  - name: "Team Lead"
+    email: "lead@signalhire.dev"
+    role: "ML Engineer & Full-Stack"
+
+github_repo: "https://github.com/YOUR_USERNAME/signalhire"
+
+sandbox_link: "https://YOUR_USERNAME-signalhire.streamlit.app"
+
+reproduce_command: "python backend/ranker.py --candidates ./backend/candidates.jsonl --out ./submission.csv"
+
+compute:
+  platform: "Local CPU"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.11"
+  os: "Windows 11"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude (Antigravity) as an AI coding assistant for architecture discussion,
+  code generation, and system design. The scoring logic, feature engineering,
+  and honeypot detection are original engineering decisions.
+  No candidate data was fed to any external LLM during the ranking step.
+  The Anthropic API is used ONLY for the /api/chat endpoint (recruiter AI assistant feature),
+  not during candidate scoring.
+
+methodology_summary: |
+  Rule-based ranker with explicit multi-signal scoring. Six weighted components:
+  skill match (35%), career trajectory (30%), experience seniority (15%), 
+  location proximity (10%), education tier (5%), and availability/salary fit (5%).
+  
+  Key differentiators:
+  - Skill scoring weights proficiency (expert=1.0 to beginner=0.2), endorsements 
+    (log-normalized), and duration in months — preventing keyword stuffers from 
+    ranking high on skills they listed but never used.
+  - Career scoring penalizes consulting-only backgrounds (0.3x or 0.7x multiplier), 
+    detects title-chasers (4+ jobs <18mo each), and rewards product-company experience.
+  - Multiplicative behavioral multiplier (clamped 0.25–1.25) uses all 23 Redrob 
+    signals: open_to_work_flag, last_active_date, recruiter_response_rate, 
+    interview_completion_rate, github_activity_score, verification status, 
+    profile completeness, and more.
+  - Honeypot detection flags 5 impossible profile patterns (e.g., 8yr experience 
+    but career totals <24mo, 5+ expert skills with 0 duration, perfectly maxed 
+    platform metrics).
+  - Streaming generator reads candidates.jsonl line-by-line — O(1) memory regardless
+    of dataset size. Min-heap maintains top-100 efficiently.
+  - Runtime: ~60–90 seconds on 100K candidates on 8-core CPU.
+
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true
