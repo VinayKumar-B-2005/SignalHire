@@ -33,14 +33,51 @@ from ranker import rank_candidates, score_candidate, generate_reasoning, is_hone
 
 # ── Paths ───────────────────────────────────────────────────────────────────
 BACKEND_DIR = Path(__file__).parent
-CANDIDATES_JSONL = BACKEND_DIR / "candidates.jsonl"
 SAMPLE_CANDIDATES = BACKEND_DIR.parent / "sample_candidates.json"
 
-# If not found in backend/, look one level up
-if not CANDIDATES_JSONL.exists():
+POSSIBLE_PATHS = [
+    Path("./candidates.jsonl.xz"),
+    Path("./backend/candidates.jsonl.xz"),
+    Path("candidates.jsonl.xz"),
+    Path("/app/candidates.jsonl.xz"),
+    BACKEND_DIR / "candidates.jsonl.xz",
+    BACKEND_DIR.parent / "candidates.jsonl.xz"
+]
+
+CANDIDATES_JSONL_XZ = None
+found_path_str = "None"
+startup_logs = ["", "="*50, "=== STARTUP DIAGNOSTICS ===", "Paths checked for candidates.jsonl.xz:"]
+
+for p in POSSIBLE_PATHS:
+    try:
+        resolved = p.resolve()
+        exists = resolved.exists()
+        startup_logs.append(f" - {p} (Resolved: {resolved}) -> Exists: {exists}")
+        if exists and CANDIDATES_JSONL_XZ is None:
+            CANDIDATES_JSONL_XZ = resolved
+            found_path_str = str(resolved)
+    except Exception as e:
+        startup_logs.append(f" - {p} -> Error: {e}")
+
+CANDIDATES_JSONL = BACKEND_DIR / "candidates.jsonl"
+if not CANDIDATES_JSONL_XZ and not CANDIDATES_JSONL.exists():
     CANDIDATES_JSONL = BACKEND_DIR.parent / "candidates.jsonl"
 
-PREVIEW_MODE = not CANDIDATES_JSONL.exists()
+PREVIEW_MODE = not (CANDIDATES_JSONL_XZ or CANDIDATES_JSONL.exists())
+
+startup_logs.append("")
+if CANDIDATES_JSONL_XZ:
+    startup_logs.append(f"FOUND COMPRESSED DATASET: {found_path_str}")
+elif CANDIDATES_JSONL.exists():
+    startup_logs.append(f"FOUND UNCOMPRESSED DATASET: {CANDIDATES_JSONL}")
+else:
+    startup_logs.append("NO FULL DATASET FOUND. USING SAMPLE DATA.")
+
+startup_logs.append(f"PREVIEW_MODE: {PREVIEW_MODE}")
+startup_logs.append(f"Sample candidates file exists: {SAMPLE_CANDIDATES.exists()}")
+startup_logs.extend(["="*50, ""])
+
+print("\n".join(startup_logs))
 
 # ── App ─────────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -76,14 +113,26 @@ def stream_candidates_list():
         return load_sample_candidates()
 
     candidates = []
-    with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                try:
-                    candidates.append(json.loads(line))
-                except Exception:
-                    continue
+    
+    if CANDIDATES_JSONL_XZ:
+        import lzma
+        with lzma.open(CANDIDATES_JSONL_XZ, "rt", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        candidates.append(json.loads(line))
+                    except Exception:
+                        continue
+    else:
+        with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        candidates.append(json.loads(line))
+                    except Exception:
+                        continue
     return candidates
 
 
@@ -95,17 +144,31 @@ def get_candidate_by_id(candidate_id: str) -> Optional[dict]:
                 return c
         return None
 
-    with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                c = json.loads(line)
-                if c.get("candidate_id") == candidate_id:
-                    return c
-            except Exception:
-                continue
+    if CANDIDATES_JSONL_XZ:
+        import lzma
+        with lzma.open(CANDIDATES_JSONL_XZ, "rt", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    c = json.loads(line)
+                    if c.get("candidate_id") == candidate_id:
+                        return c
+                except Exception:
+                    continue
+    else:
+        with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    c = json.loads(line)
+                    if c.get("candidate_id") == candidate_id:
+                        return c
+                except Exception:
+                    continue
     return None
 
 
@@ -154,11 +217,19 @@ class CompareRequest(BaseModel):
 
 @app.get("/")
 def root():
+    if CANDIDATES_JSONL_XZ:
+        source = str(CANDIDATES_JSONL_XZ)
+    elif CANDIDATES_JSONL.exists():
+        source = str(CANDIDATES_JSONL)
+    else:
+        source = "sample_candidates.json"
+
     return {
         "name": "SignalHire API",
         "version": "1.0.0",
         "preview_mode": PREVIEW_MODE,
-        "candidates_source": str(CANDIDATES_JSONL) if not PREVIEW_MODE else "sample_candidates.json",
+        "candidates_source": source,
+        "actually_found_path": found_path_str
     }
 
 
@@ -169,7 +240,12 @@ def rank_endpoint(req: RankRequest):
 
     top_n = min(req.top_n, 100)
 
-    source = str(CANDIDATES_JSONL) if not PREVIEW_MODE else str(SAMPLE_CANDIDATES)
+    if CANDIDATES_JSONL_XZ:
+        source = str(CANDIDATES_JSONL_XZ)
+    elif CANDIDATES_JSONL.exists():
+        source = str(CANDIDATES_JSONL)
+    else:
+        source = str(SAMPLE_CANDIDATES)
 
     if PREVIEW_MODE:
         # Score from sample JSON
@@ -218,7 +294,7 @@ def rank_endpoint(req: RankRequest):
         }
 
     # Full JSONL ranking
-    results = rank_candidates(str(CANDIDATES_JSONL), top_n=top_n)
+    results = rank_candidates(source, top_n=top_n)
     ranked = results["ranked"]
 
     # Merge candidate data into response
