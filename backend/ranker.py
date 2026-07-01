@@ -127,11 +127,15 @@ def days_since(date_str: str) -> int:
 # HONEYPOT DETECTION
 # ─────────────────────────────────────────────────────────────────────────────
 
+HONEYPOT_COUNTS = {f"Rule {i}": 0 for i in range(1, 10)}
+
 def is_honeypot(candidate: dict) -> bool:
+    global HONEYPOT_COUNTS
     profile = candidate.get("profile", {})
     career = candidate.get("career_history", [])
     skills = candidate.get("skills", [])
     signals = candidate.get("redrob_signals", {})
+    education = candidate.get("education", [])
 
     yoe = profile.get("years_of_experience", 0)
     total_career_months = sum(r.get("duration_months", 0) for r in career)
@@ -148,24 +152,86 @@ def is_honeypot(candidate: dict) -> bool:
 
     # Rule 1: yoe > 8 but total career months < 24
     if yoe > 8 and total_career_months < 24:
+        HONEYPOT_COUNTS["Rule 1"] += 1
         return True
 
     # Rule 2: 5+ expert skills with duration_months == 0
     if expert_zero_duration >= 5:
+        HONEYPOT_COUNTS["Rule 2"] += 1
         return True
 
     # Rule 3: Any single role has duration > (yoe * 12) + 24
     for role in career:
         dur = role.get("duration_months", 0)
         if dur > (yoe * 12) + 24:
+            HONEYPOT_COUNTS["Rule 3"] += 1
             return True
 
     # Rule 4: yoe < 2 but 8+ expert skills
     if yoe < 2 and expert_skill_count >= 8:
+        HONEYPOT_COUNTS["Rule 4"] += 1
         return True
 
     # Rule 5: all four platform metrics maxed out perfectly
     if pc == 100 and gh == 100 and rr == 1.0 and ic == 1.0:
+        HONEYPOT_COUNTS["Rule 5"] += 1
+        return True
+
+    # NEW RULES
+    phd_terms = {"ph.d", "phd", "doctorate"}
+    masters_terms = {"masters", "m.s.", "m.sc", "m.e.", "m.tech", "mba", "m.a."}
+    bachelor_terms = {"b.e.", "b.tech", "b.sc", "bachelor"}
+
+    tier1_count = 0
+    all_degrees_are_pg = True
+    undergrad_count = 0
+    
+    phd_ends = []
+    ug_starts = []
+
+    for edu in education:
+        deg = edu.get("degree", "")
+        if deg is None:
+            deg = ""
+        deg_lower = deg.lower()
+        start = edu.get("start_year") or 0
+        end = edu.get("end_year") or 0
+        tier = edu.get("tier", "")
+        
+        is_phd = any(t in deg_lower for t in phd_terms)
+        is_masters = any(t in deg_lower for t in masters_terms)
+        is_pg = is_phd or is_masters
+        is_ug = any(t in deg_lower for t in bachelor_terms)
+
+        # Rule 7: Education clearly impossible timeline
+        if start > 0 and end > 0:
+            if start - end > 1:
+                HONEYPOT_COUNTS["Rule 7"] += 1
+                return True
+
+        if is_phd and end > 0:
+            phd_ends.append(end)
+                
+        if is_ug and start > 0:
+            undergrad_count += 1
+            ug_starts.append(start)
+                
+        if not is_pg:
+            all_degrees_are_pg = False
+            
+        if tier == "tier_1":
+            tier1_count += 1
+
+    # Rule 6: PhD completed before Bachelor's started, gap > 13 years (loosened)
+    for p_end in phd_ends:
+        for u_start in ug_starts:
+            if p_end < u_start and (u_start - p_end) > 13:
+                HONEYPOT_COUNTS["Rule 6"] += 1
+                return True
+
+    # Rule 8: Multiple top-tier postgrad degrees with no Bachelor's (loosened)
+    if len(education) > 0 and tier1_count >= 2 and all_degrees_are_pg and undergrad_count == 0 and yoe < 3:
+        HONEYPOT_COUNTS["Rule 8"] += 1
         return True
 
     return False
@@ -696,15 +762,27 @@ def stream_candidates(jsonl_path: str):
     if not path.exists():
         raise FileNotFoundError(f"candidates file not found: {jsonl_path}")
 
-    with open(path, "r", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                yield json.loads(line)
-            except json.JSONDecodeError:
-                continue
+    if str(path).endswith(".xz"):
+        import lzma
+        with lzma.open(path, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    yield json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+    else:
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    yield json.loads(line)
+                except json.JSONDecodeError:
+                    continue
 
 
 def rank_candidates(
@@ -851,6 +929,9 @@ def main():
     print(f"\n{'='*50}")
     print(f"  Total processed  : {stats['total_processed']:,}")
     print(f"  Honeypots removed: {stats['honeypots_removed']}")
+    print(f"    - Rule 6       : {HONEYPOT_COUNTS.get('Rule 6', 0)}")
+    print(f"    - Rule 7       : {HONEYPOT_COUNTS.get('Rule 7', 0)}")
+    print(f"    - Rule 8       : {HONEYPOT_COUNTS.get('Rule 8', 0)}")
     print(f"  Time taken       : {stats['time_seconds']}s")
     print(f"  Top score        : {stats['top_score']:.4f}")
     print(f"  Avg score        : {stats['avg_score']:.4f}")
