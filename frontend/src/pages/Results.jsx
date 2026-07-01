@@ -69,6 +69,8 @@ function matchesFilters(c, filters) {
 }
 
 export default function Results() {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
   const { rankingData, addBookmark, removeBookmark, isBookmarked, compareCandidates, toggleCompare, clearCompare } = useApp()
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [selectedCandidate, setSelectedCandidate] = useState(null)
@@ -82,7 +84,7 @@ export default function Results() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch('/api/export', {
+      const res = await fetch(`${API_URL}/api/export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidates }),

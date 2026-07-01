@@ -90,6 +90,8 @@ const STAT_PILLS = [
 ]
 
 export default function Landing() {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
   const navigate = useNavigate()
   const { setRankingData } = useApp()
   const [jobDesc, setJobDesc] = useState(JOB_DESCRIPTION)
@@ -139,7 +141,7 @@ export default function Landing() {
     setStatusIndex(0)
 
     try {
-      const res = await fetch('/api/rank', {
+      const res = await fetch(`${API_URL}/api/rank`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ job_description: jobDesc, top_n: 100 }),
