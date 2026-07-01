@@ -4,13 +4,15 @@ import { Zap, Download, LayoutDashboard, BarChart3, Bookmark } from 'lucide-reac
 import { useApp } from '../App.jsx'
 
 export default function Navbar() {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
   const { rankingData } = useApp()
   const navigate = useNavigate()
 
   const handleExport = async () => {
     try {
       const candidates = rankingData?.candidates || []
-      const res = await fetch('/api/export', {
+      const res = await fetch(`${API_URL}/api/export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidates }),

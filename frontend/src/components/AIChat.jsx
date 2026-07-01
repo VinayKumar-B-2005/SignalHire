@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, X, Send, Loader2 } from 'lucide-react'
 import { useApp } from '../App.jsx'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const SUGGESTIONS = [
   "Who are the top 3 candidates and why?",
   "Which candidates have the shortest notice periods?",
@@ -33,7 +35,7 @@ export default function AIChat() {
 
     try {
       const candidates = rankingData?.candidates || []
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, candidates }),
