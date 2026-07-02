@@ -225,7 +225,7 @@ if run_btn:
             return 'background-color: rgba(245,158,11,0.15); color: #F59E0B'
         return 'background-color: rgba(239,68,68,0.1); color: #EF4444'
 
-    styled = df.style.applymap(color_score, subset=['Score'])
+    styled = df.style.map(color_score, subset=['Score'])
     st.dataframe(styled, use_container_width=True, height=500)
 
     # Download CSV
